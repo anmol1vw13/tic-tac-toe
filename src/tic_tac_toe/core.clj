@@ -40,6 +40,7 @@
   "Displays the board"
   [board]
     (let [size (:size board)]
+    (println "\n")
     (println (clojure.string/join "\n\n" 
     (map render-row (repeat board)
           (map #(+ 1 (* % size)) (range 0 size))))))
@@ -123,19 +124,32 @@
   )
 )
 
+(defn game-over?
+  [board]
+  (let [size (:size board)]
+    (every? true? (map #(not= "_" (get-in board [% :value])) (range 1 (inc (* size size))) ))
+  )
+)
+
 
 (defn prompt-move
   [board, player1, player2, move_dict]
   
-  (println (str player1,", it's your turn. Choose a valid position"))
+  (print (str "\n",player1,", it's your turn. Choose a valid position: "))
+  (flush)
   (let [pos (parse-int (get-input))]
     (if (valid-move? board pos)
       (do
         (let [move (get move_dict player1) new_board (make-move board pos move)]
-        (display-board new_board)
-        (if (win? new_board move)
-          (println (str player1 " has won the game"))
-          (prompt-move new_board player2 player1 move_dict))
+          (display-board new_board)
+          (if (win? new_board move)
+            (println (str player1 " has won the game"))
+            (do
+              (if (game-over? new_board)
+              (println "The game has ended in a draw")
+              (prompt-move new_board player2 player1 move_dict)
+              )
+            ))
         )
       )
       (do (println "Invalid move!")
@@ -161,14 +175,16 @@
 
 (defn prompt-players
   []
-  (println "Who art thou players?")
-  (println "Player1: ")
+  (println "Who art thou players?\n")
+  (print "Player1: ")
+  (flush)
   (let [player1 (get-input "player-1")]
-    (println "Player2: ")
+    (print "Player2: ")
+    (flush)
     (let [player2 (get-input "player-2")]
     (if (= player1 player2)
-      (println "Players need to have different names")
-      (do (println (str "Starting off the game with ", player1, " and ", player2, "\n\n"))
+      (println "\nPlayers need to have different names")
+      (do (println (str "\nStarting off the game with ", player1, " and ", player2))
         (start-game player1 player2))
     )
     )
@@ -177,5 +193,5 @@
 
 (defn -main
   [& args]
-  (println "Tic tac toe, who's gonna bow?")
+  (println "\nTic tac toe, who's gonna bow?\n")
   (prompt-players))
