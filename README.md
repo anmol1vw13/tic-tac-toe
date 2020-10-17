@@ -1,6 +1,10 @@
-# tic-tac-toe
+## XOXO
+A clojure based tic tac toe game.
 
-A clojure based tic tac toe game
+### Features
+* A two player game.
+* Contains tally board to view the results.
+* Players can play indefinitely.
 
 ### Usage
 
@@ -9,6 +13,6 @@ A clojure based tic tac toe game
 *   Run `lein uberjar`
 *   To start the game, run 
     ```
-    java -jar tic-tac-toe-game-standalone.jar
+    java -jar target/uberjar/tic-tac-toe-game-standalone.jar
     ```
 ## Have fun :)
