@@ -60,8 +60,11 @@
   [board pos]
   (let [size (:size board)]
     (if (<= pos (* size size))
-    true
-    false)
+      (if (= "_" (get-in board [pos :value]))
+        true
+        false
+      )
+      false)
   )
 )
 
