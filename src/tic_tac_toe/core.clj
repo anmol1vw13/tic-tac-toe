@@ -146,13 +146,14 @@
         (let [move (get move_dict player1) new_board (make-move board pos move)]
           (display-board new_board)
           (if (win? new_board move)
-            (println (str player1 " has won the game"))
+            player1
             (do
               (if (game-over? new_board)
-              (println "The game has ended in a draw")
+              "draw"
               (prompt-move new_board player2 player1 move_dict)
               )
-            ))
+            )
+          )
         )
       )
       (do (println "Invalid move!")
@@ -163,18 +164,70 @@
   
 )
 
+(defn render-tally-record
+  [[game_no, result], player1, player2]
+  (cond 
+    (= result player1) (str game_no,"\t\twon\t\tlost\n")
+    (= result player2) (str game_no,"\t\tlost\t\twon\n") 
+    :else (str game_no,"\t\tdraw\t\tdraw\n") 
+  )
+)
+
+(defn render-tally-card
+  [tally-card, player1, player2]
+  (let [header (str "\n\nGame\t\t",player1,"\t\t",player2,"\n\n")]
+  (str header (clojure.string/join "\n\n" (map render-tally-record tally-card (repeat player1) (repeat player2)))))
+)
+
+(defn next-steps
+  [player1, player2, tally-card]
+  (println "\nWhat do you want to do? \n1. Play Again\n2. View tally card\n3. End game")
+  (print "Choose a number (1,2,3): ")
+  (flush)
+  (let [input (get-input "3")]
+    (cond
+      (= input "1") (do (println (str "\n", player2, " starts this time!!")) input)
+      (= input "2") (do 
+                      (println (render-tally-card tally-card player1 player2))
+                      (next-steps player1 player2 tally-card)
+                    )
+      (= input "3") (println "Exiting ...")
+      :else (do (println "\nWrong input") (next-steps player1 player2 tally-card))
+    )
+  )
+)
+
+
+(defn update-result
+  [game, player1, player2, result, tally-card]
+  (cond
+    (or (= result player1) (= result player2)) (println (str "\n", result, " has won the game\n"))
+    :else (println "It's a draw") 
+  )
+  (assoc tally-card game result)
+)
+
 (defn start-game
   "Marks the beginning of the game"
-  [player1, player2]
-  
+  ([player1, player2, tally-card] (start-game player1 player2 tally-card 1))
+  ([player1, player2, tally-card, game]
     (let [size 3]
       (def move_dict {player1 "X" player2 "O"})
       (def board (make-board size))
     )
     (display-board board)
-    (prompt-move board player1 player2 move_dict)
-
+    (def result (prompt-move board player1 player2 move_dict))
+    (def updated-tally-card (update-result game player1 player2 result tally-card))
+    (def next-steps-input (next-steps player1 player2 updated-tally-card))
+    (if (= "1" next-steps-input)
+      (start-game player2 player1 updated-tally-card (inc game))
+    )
+  )
 )
+
+
+
+
 
 (defn prompt-players
   []
@@ -188,7 +241,7 @@
     (if (= player1 player2)
       (println "\nPlayers need to have different names")
       (do (println (str "\nStarting off the game with ", player1, " and ", player2))
-        (start-game player1 player2))
+        (start-game player1 player2 {}))
     )
     )
   )
