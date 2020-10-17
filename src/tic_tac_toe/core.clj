@@ -64,6 +64,65 @@
   )
 )
 
+(defn row-win?
+  [board move counter pos]
+  (let [size (:size board)]
+    (if (<= counter size)
+      (if (= move(get-in board [pos :value]))
+      (row-win? board move (inc counter) (inc pos))
+      false
+      )
+      true
+    )
+  )
+)
+
+
+(defn column-win?
+  [board move counter pos]
+  (let [size (:size board)]
+    (if (<= counter size)
+      (if (= move(get-in board [pos :value]))
+      (column-win? board  move (inc counter) (+ pos size))
+      false
+      )
+      true
+    )
+  )
+)
+
+(defn diagonal-win?
+  [board move counter inc_value pos]
+  (let [size (:size board)]
+    (if (<= counter size)
+      (if (= move(get-in board [pos :value]))
+      (diagonal-win? board  move (inc counter) inc_value (+ pos (+ size inc_value)))
+      false
+      )
+      true
+    )
+  )
+)
+
+(defn win?
+  [board move]
+  (let [size (:size board)]
+    (if (some true? (map row-win? (repeat board) (repeat move) (repeat 1) (map #(+ 1 (* % size)) (range 0 size ))))
+        true
+        (if (some true? (map column-win? (repeat board) (repeat move) (repeat 1) (range 1 (inc size) )))
+          true
+          (if (diagonal-win? board move 1 1 1)
+            true
+            (if (diagonal-win? board move 1 -1 size)
+              true
+              false
+            )
+          )
+        )
+    )
+  )
+)
+
 
 (defn prompt-move
   [board, player1, player2, move_dict]
@@ -72,10 +131,12 @@
   (let [pos (parse-int (get-input))]
     (if (valid-move? board pos)
       (do
-        (let [new_board (make-move board pos (get move_dict player1))]
+        (let [move (get move_dict player1) new_board (make-move board pos move)]
         (display-board new_board)
-        (prompt-move new_board player2 player1 move_dict))
-        
+        (if (win? new_board move)
+          (println (str player1 " has won the game"))
+          (prompt-move new_board player2 player1 move_dict))
+        )
       )
       (do (println "Invalid move!")
         (prompt-move board player1 player2 move_dict)
@@ -113,9 +174,6 @@
     )
   )
 )
-
-  
-
 
 (defn -main
   [& args]
