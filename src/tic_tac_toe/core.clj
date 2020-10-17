@@ -41,7 +41,9 @@
                                        (map #(+ 1 (* % size)) (range 0 size)))))))
 
 (defn parse-int [s]
-  (Integer. (re-find  #"\d+" s)))
+  (try (Integer. (re-find  #"\d+" s))
+       (catch Exception ex
+         0)))
 
 (defn make-move
   [board pos string]
@@ -50,7 +52,7 @@
 (defn valid-move?
   [board pos]
   (let [size (:size board)]
-    (if (<= pos (* size size))
+    (if (and (> pos 0) (<= pos (* size size)))
       (if (= "_" (get-in board [pos :value]))
         true
         false)
