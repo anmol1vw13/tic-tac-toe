@@ -10,31 +10,39 @@
        default
        input))))
 
+
+(defn get-position
+  [board pos]
+  (nth board (dec pos))
+)
+
 (defn make-board
   "Makes the board used to play tic-tac-toe"
-  ([size] (make-board {:size size} 1))
-  ([board number]
-   (let [size (:size board)]
-     (if (<= number (* size size))
-       (let [valued-board (assoc-in board [number :value] "_")]
-         (make-board valued-board (inc number)))
-       board))))
+  [size]
+  (into [] (map (fn[num] "_") (range 1 (inc (* size size)))))
+)
+
+(defn board-row-count
+  [board]
+  (int (Math/sqrt (count board)))
+)
+  
 
 (defn render-number
   "Renders the number from the board with it's current value"
   [board number]
-  (str number,(get-in board [number :value]) "  "))
+  (str number,(get-position board number) "  "))
 
 (defn render-row
   "Renders the indexes in the board within the range"
   [board start]
-  (let [size (:size board)]
+  (let [size (board-row-count board)]
     (clojure.string/join " " (map render-number (repeat board) (range start (+ start size))))))
 
 (defn display-board
   "Displays the board"
   [board]
-  (let [size (:size board)]
+  (let [size (board-row-count board)]
     (println "\n")
     (println (clojure.string/join "\n\n"
                                   (map render-row (repeat board)
@@ -47,47 +55,48 @@
 
 (defn make-move
   [board pos string]
-  (assoc-in board [pos :value] string))
+  (assoc board (dec pos) string))
+
 
 (defn valid-move?
   [board pos]
-  (let [size (:size board)]
+  (let [size (board-row-count board)]
     (if (and (> pos 0) (<= pos (* size size)))
-      (if (= "_" (get-in board [pos :value]))
+      (if (= "_" (get-position board pos))
         true
         false)
       false)))
 
 (defn row-win?
   [board move counter pos]
-  (let [size (:size board)]
+  (let [size (board-row-count board)]
     (if (<= counter size)
-      (if (= move (get-in board [pos :value]))
+      (if (= move (get-position board pos))
         (row-win? board move (inc counter) (inc pos))
         false)
       true)))
 
 (defn column-win?
   [board move counter pos]
-  (let [size (:size board)]
+  (let [size (board-row-count board)]
     (if (<= counter size)
-      (if (= move (get-in board [pos :value]))
+      (if (= move (get-position board pos))
         (column-win? board  move (inc counter) (+ pos size))
         false)
       true)))
 
 (defn diagonal-win?
   [board move counter inc_value pos]
-  (let [size (:size board)]
+  (let [size (board-row-count board)]
     (if (<= counter size)
-      (if (= move (get-in board [pos :value]))
+      (if (= move (get-position board pos))
         (diagonal-win? board  move (inc counter) inc_value (+ pos (+ size inc_value)))
         false)
       true)))
 
 (defn win?
   [board move]
-  (let [size (:size board)]
+  (let [size (board-row-count board)]
     (if (some true? (map row-win? (repeat board) (repeat move) (repeat 1) (map #(+ 1 (* % size)) (range 0 size))))
       true
       (if (some true? (map column-win? (repeat board) (repeat move) (repeat 1) (range 1 (inc size))))
@@ -100,8 +109,8 @@
 
 (defn game-over?
   [board]
-  (let [size (:size board)]
-    (every? true? (map #(not= "_" (get-in board [% :value])) (range 1 (inc (* size size)))))))
+  (let [size (board-row-count board)]
+    (every? true? (map #(not= "_" (get-position board %)) (range 1 (inc (* size size)))))))
 
 (defn prompt-move
   [board, player1, player2, move_dict]
